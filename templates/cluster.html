@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Monthly payment patterns{% endblock %}
+{% block heading %}Monthly payment patterns{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="section-heading">
+        <div>
+            <h2>Filters</h2>
+        </div>
+    </div>
+    <form method="post" class="filters cluster-filters">
+        <div>
+            <label for="system">Payment system</label>
+            <select id="system" name="system">
+                <option value="all" {% if filters.system == 'all' %}selected{% endif %}>All systems</option>
+                {% for system in systems %}
+                <option value="{{ system }}" {% if filters.system == system %}selected{% endif %}>{{ system }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="year">Year</label>
+            <select id="year" name="year">
+                <option value="all" {% if filters.year == 'all' %}selected{% endif %}>All years</option>
+                {% for year in years %}
+                <option value="{{ year }}" {% if filters.year|string == year|string %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="month">Month</label>
+            <select id="month" name="month">
+                <option value="all" {% if filters.month == 'all' %}selected{% endif %}>All months</option>
+                {% for month in months %}
+                <option value="{{ month }}" {% if filters.month|string == month|string %}selected{% endif %}>{{ month }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="start_month">Start month</label>
+            <input id="start_month" name="start_month" type="month" value="{{ filters.start_month }}" required>
+        </div>
+        <div>
+            <label for="end_month">End month</label>
+            <input id="end_month" name="end_month" type="month" value="{{ filters.end_month }}" required>
+        </div>
+        <div>
+            <label for="pattern">Pattern</label>
+            <select id="pattern" name="pattern">
+                <option value="all" {% if filters.pattern == 'all' %}selected{% endif %}>All patterns</option>
+                {% for pattern in patterns %}
+                <option value="{{ pattern }}" {% if filters.pattern == pattern %}selected{% endif %}>{{ pattern }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="state">State</label>
+            <select id="state" name="state">
+                <option value="all" {% if filters.state == 'all' %}selected{% endif %}>Normal and unusual</option>
+                <option value="normal" {% if filters.state == 'normal' %}selected{% endif %}>Normal</option>
+                <option value="unusual" {% if filters.state == 'unusual' %}selected{% endif %}>Unusual</option>
+            </select>
+        </div>
+        <div class="form-action"><button type="submit">Apply filters</button></div>
+    </form>
+    <div class="meta-strip" aria-label="What the dataset holds">
+        <span><strong>{{ dataset_summary.rows }}</strong> records</span>
+        <span><strong>{{ dataset_summary.systems }}</strong> systems</span>
+        <span><strong>{{ dataset_summary.first_month }}</strong> to <strong>{{ dataset_summary.last_month }}</strong></span>
+        <span><strong>{{ results|length if not errors else 0 }}</strong> selected</span>
+    </div>
+</section>
+
+{% if errors %}
+<section class="panel error" role="alert">
+    {% for error in errors %}<div>{{ error }}</div>{% endfor %}
+</section>
+{% endif %}
+
+{% if detail %}
+<section class="panel result-highlight">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">The month we selected</span>
+            <h2>{{ detail.system }} · {{ detail.report_month_label }}</h2>
+        </div>
+        <span class="status status-{{ detail.state }}">{{ detail.state|title }}</span>
+    </div>
+    <dl class="fact-grid">
+        <div><dt>Pattern</dt><dd>{{ detail.pattern }}</dd></div>
+        <div><dt>Transactions</dt><dd>{{ detail.transactions_total|number }}</dd></div>
+        <div><dt>Total value</dt><dd>JOD {{ detail.transaction_value_jod|number }}</dd></div>
+        <div><dt>Average value</dt><dd>JOD {{ detail.average_transaction_value|number }}</dd></div>
+        <div><dt>Unusual score</dt><dd>{{ detail.distance_percentile_within_cluster|decimal }}%</dd></div>
+    </dl>
+</section>
+{% endif %}
+
+{% if not errors %}
+<section class="panel">
+    <div class="section-heading">
+        <div><h2>Charts</h2></div>
+    </div>
+    <div class="chart-grid">
+        {% if trend_chart %}<img src="{{ trend_chart }}" alt="How the transactions and the values we selected changed over time">{% endif %}
+        <img src="{{ pca_chart }}" alt="The monthly payment patterns shown in PCA space">
+    </div>
+</section>
+{% endif %}
+
+{% if results and not errors %}
+<details class="panel expandable" {% if results|length <= 25 %}open{% endif %}>
+    <summary>Monthly records ({{ results|length }})</summary>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Month</th><th>System</th><th>Pattern</th><th>State</th><th>Transactions</th><th>Total value (JOD)</th><th>Average value</th><th>Unusual score</th></tr></thead>
+            <tbody>
+            {% for row in results %}
+            <tr>
+                <td class="nowrap">{{ row.report_month_label }}</td>
+                <td>{{ row.system }}</td>
+                <td>{{ row.pattern }}</td>
+                <td class="state-{{ row.state }}">{{ row.state|title }}</td>
+                <td>{{ row.transactions_total|number }}</td>
+                <td>{{ row.transaction_value_jod|number }}</td>
+                <td>{{ row.average_transaction_value|number }}</td>
+                <td>{{ row.distance_percentile_within_cluster|decimal }}%</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</details>
+{% elif not errors %}
+<section class="panel empty-state">No months match the filters we chose.</section>
+{% endif %}
+
+{% if similar %}
+<details class="panel expandable">
+    <summary>Similar months</summary>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Month</th><th>System</th><th>Pattern</th><th>State</th><th>Transactions</th><th>Total value (JOD)</th><th>PCA distance</th></tr></thead>
+            <tbody>
+            {% for row in similar %}
+            <tr>
+                <td>{{ row.report_month_label }}</td><td>{{ row.system }}</td><td>{{ row.pattern }}</td>
+                <td class="state-{{ row.state }}">{{ row.state|title }}</td>
+                <td>{{ row.transactions_total|number }}</td><td>{{ row.transaction_value_jod|number }}</td><td>{{ row.similarity_distance|decimal }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</details>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Flask App{% endblock %}
+{% block heading %}Flask App{% endblock %}
+{% block content %}
+<section class="panel">
+    <h2>Choose an activity</h2>
+    <div class="activity-list">
+        <article class="activity-row">
+            <div>
+                <span class="eyebrow">Activity 2</span>
+                <h3>Monthly payment patterns</h3>
+            </div>
+            <a class="button-link" href="{{ url_for('cluster') }}">Open</a>
+        </article>
+        <article class="activity-row">
+            <div>
+                <span class="eyebrow">Activity 3</span>
+                <h3>Report questions</h3>
+            </div>
+            <a class="button-link" href="{{ url_for('text') }}">Open</a>
+        </article>
+        <article class="activity-row">
+            <div>
+                <span class="eyebrow">Activity 4</span>
+                <h3>Payment activity graph</h3>
+            </div>
+            <a class="button-link" href="{{ url_for('graph') }}">Open</a>
+        </article>
+    </div>
+</section>
+{% endblock %}

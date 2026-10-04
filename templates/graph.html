@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Payment activity graph{% endblock %}
+{% block heading %}Payment activity graph{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="section-heading">
+        <div><h2>Choose what to graph</h2></div>
+    </div>
+    <form method="post" class="filters graph-filters">
+        <div>
+            <label for="system">Payment system</label>
+            <select id="system" name="system">
+                {% for system in systems %}<option value="{{ system }}" {% if filters.system == system %}selected{% endif %}>{{ system }}</option>{% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="start_month">Start month</label>
+            <input id="start_month" name="start_month" type="month" value="{{ filters.start_month }}" required>
+        </div>
+        <div>
+            <label for="end_month">End month</label>
+            <input id="end_month" name="end_month" type="month" value="{{ filters.end_month }}" required>
+        </div>
+        <div>
+            <label for="indicator">Payment indicator</label>
+            <select id="indicator" name="indicator">
+                {% for key, label in indicators.items() %}<option value="{{ key }}" {% if filters.indicator == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-action"><button type="submit">Show graph</button></div>
+    </form>
+</section>
+
+{% if error %}<section class="panel error" role="alert">{{ error }}</section>{% endif %}
+
+{% if result %}
+<section class="panel">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">{{ result.start_month }} to {{ result.end_month }}</span>
+            <h2>{{ result.system }} · {{ result.indicator_label }}</h2>
+        </div>
+    </div>
+    <figure>
+        <img class="graph-image" src="{{ result.graph_image }}" alt="The directed weighted graph of the activity transitions">
+    </figure>
+</section>
+
+<section class="panel">
+    <div class="section-heading">
+        <div><h2>Transitions</h2></div>
+    </div>
+    <div class="table-wrap compact-table">
+        <table><thead><tr><th>From</th><th>To</th><th>Weight</th></tr></thead><tbody>{% for edge in result.edges %}<tr><td>{{ edge.source }}</td><td>{{ edge.target }}</td><td>{{ edge.weight }}</td></tr>{% endfor %}</tbody></table>
+    </div>
+</section>
+
+<details class="panel expandable">
+    <summary>Monthly states</summary>
+    <div class="table-wrap compact-table">
+        <table>
+            <thead><tr><th>Month</th><th>{{ result.indicator_label }}</th><th>Activity level</th></tr></thead>
+            <tbody>{% for row in result.monthly_data %}<tr><td>{{ row.month_label }}</td><td>{{ row.indicator_value|number }}</td><td>{{ row.activity }}</td></tr>{% endfor %}</tbody>
+        </table>
+    </div>
+</details>
+
+<details class="panel expandable">
+    <summary>Graph measures</summary>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>State</th><th>In-degree</th><th>Out-degree</th><th>Incoming frequency</th><th>Outgoing frequency</th><th>In-degree centrality</th><th>Out-degree centrality</th><th>Weighted PageRank</th><th>Outgoing closeness</th><th>Betweenness</th></tr></thead>
+            <tbody>{% for row in result.measures %}<tr><td>{{ row.node }}</td><td>{{ row.in_degree }}</td><td>{{ row.out_degree }}</td><td>{{ row.incoming_frequency }}</td><td>{{ row.outgoing_frequency }}</td><td>{{ row.in_degree_centrality|score }}</td><td>{{ row.out_degree_centrality|score }}</td><td>{{ row.pagerank|score }}</td><td>{{ row.closeness|score }}</td><td>{{ row.betweenness|score }}</td></tr>{% endfor %}</tbody>
+        </table>
+    </div>
+</details>
+{% endif %}
+{% endblock %}

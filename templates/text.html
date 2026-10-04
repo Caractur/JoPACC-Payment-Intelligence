@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Report questions{% endblock %}
+{% block heading %}JoPACC report questions{% endblock %}
+{% block content %}
+<section class="panel question-panel">
+    <form method="post">
+        <label for="question">Ask a question about the JoPACC reports</label>
+        <div class="question-row">
+            <input id="question" type="text" name="question" maxlength="500" value="{{ question }}" placeholder="What was CliQ's transaction value in June 2026?" required>
+            <button type="submit">Ask</button>
+        </div>
+    </form>
+</section>
+
+{% if error %}<section class="panel error" role="alert">{{ error }}</section>{% endif %}
+
+{% if answer %}
+<section class="panel answer-panel">
+    <span class="eyebrow">Answer</span>
+    <p class="submitted-question">{{ question }}</p>
+    <div class="answer{% if not docs %} no-evidence{% endif %}">{{ answer }}</div>
+</section>
+
+{% if docs %}
+<section class="panel">
+    <div class="section-heading">
+        <div><h2>Sources</h2></div>
+        <span class="count-badge">{{ docs|length }}</span>
+    </div>
+    <div class="evidence-list">
+        {% for document in docs %}
+        <details class="evidence">
+            <summary>
+                <span class="source-name">{{ document.source }}</span>
+                <span>{{ document.month }} · page {{ document.page }} · score {{ document.score|score }}</span>
+            </summary>
+            <p>{{ document.text }}</p>
+        </details>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="panel empty-state">We could not find any source for this question.</section>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+# Source reports and the embedding cache built from them
+Reports/
+rag_index_cache.pkl
+
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
